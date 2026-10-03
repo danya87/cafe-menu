@@ -11,6 +11,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+
 /**
  * Тести консольного застосунку лабораторної роботи №1.
  */
@@ -159,6 +164,31 @@ class MainTest {
         assertTrue(report.contains("Меню кафе"));
         assertTrue(report.contains("Середня ціна"));
         assertTrue(report.contains("Найбільша вага"));
+    }
+
+    /**
+     * Перевіряє параметр командного рядка --version.
+     */
+    @Test
+    void versionOptionPrintsProgramVersion() {
+        PrintStream originalOut = System.out;
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+        try {
+            System.setOut(
+                    new PrintStream(
+                            buffer,
+                            true,
+                            StandardCharsets.UTF_8));
+
+            Main.main(new String[] {"--version"});
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        assertEquals(
+                "1.0.0",
+                buffer.toString(StandardCharsets.UTF_8).trim());
     }
 
     /**
