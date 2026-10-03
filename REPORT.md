@@ -303,7 +303,10 @@ Closes #3
 Closes #4
 ```
 
-**Фінальний Pull Request:** TODO — додати номер і посилання після створення PR.
+**Фінальний Pull Request:** 
+Фінальний Pull Request: #5 «Lab 1: Cafe Menu».
+
+https://github.com/danya87/cafe-menu/pull/5
 
 ## 7. Демонстрація роботи програми
 
@@ -412,7 +415,9 @@ BUILD SUCCESS
 Посилання на успішний GitHub Actions run:
 
 ```text
-TODO — вставити URL поточного зеленого CI run
+Посилання на успішний запуск CI:
+
+https://github.com/danya87/cafe-menu/actions/runs/37139568978
 ```
 
 У цьому запуску створено 3 artifacts.
@@ -583,7 +588,7 @@ GitHub Actions успішно перевіряє проєкт на Ubuntu, Windo
 v1.0.0
 ```
 
-**Фінальний Pull Request:** TODO.
+**Фінальний Pull Request:** #5 «Lab 1: Cafe Menu».
 
 **Git-тег:** TODO — створити після merge у `main`.
 
