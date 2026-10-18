@@ -19,7 +19,7 @@ public final class Main {
     private static final Path DEFAULT_OUTPUT =
             Path.of("out", "report.txt");
 
-    private static final String VERSION = "1.0.0";
+    private static final String VERSION = "2.0.0";
 
     private Main() {
         // Utility class.
@@ -175,7 +175,7 @@ public final class Main {
     private static void printHelp() {
         System.out.println("""
                 Використання:
-                  java -jar lab01-1.0.0.jar [options]
+                  java -jar lab01-2.0.0.jar [options]
 
                 Параметри:
                   --help          показати довідку
