@@ -187,7 +187,7 @@ class MainTest {
         }
 
         assertEquals(
-                "1.0.0",
+                "2.0.0",
                 buffer.toString(StandardCharsets.UTF_8).trim());
     }
 
