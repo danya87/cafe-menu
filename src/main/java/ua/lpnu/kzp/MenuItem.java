@@ -149,6 +149,15 @@ public final class MenuItem {
     }
 
     /**
+     * Повертає допоміжне незмінне представлення ціни та ваги.
+     *
+     * @return ціна та вага позиції меню
+     */
+    public PriceWeight getPriceWeight() {
+        return new PriceWeight(price, weightG);
+    }
+
+    /**
      * Повертає текстове представлення позиції меню.
      *
      * @return форматований рядок
