@@ -4,16 +4,12 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * Консольний застосунок лабораторної роботи №1.
- *
- * <p>Варіант 5 — «Меню кафе».</p>
- *
- * <p>Програма читає записи меню з UTF-8 файла, перевіряє їх,
- * обчислює показники та формує текстовий звіт.</p>
+ * Консольний застосунок для обробки меню кафе.
  */
 public final class Main {
 
@@ -26,19 +22,28 @@ public final class Main {
     private static final String VERSION = "1.0.0";
 
     private Main() {
+        // Utility class.
     }
 
     /**
-     * Точка входу програми.
+     * Точка входу в програму.
      *
      * @param args аргументи командного рядка
      */
     public static void main(String[] args) {
+        try {
+            run(args);
+        } catch (IOException | IllegalArgumentException exception) {
+            System.err.println("Помилка: " + exception.getMessage());
+        }
+    }
+
+    private static void run(String[] args) throws IOException {
         Path input = DEFAULT_INPUT;
         Path output = DEFAULT_OUTPUT;
 
-        for (int index = 0; index < args.length; index++) {
-            switch (args[index]) {
+        for (int i = 0; i < args.length; i++) {
+            switch (args[i]) {
                 case "--help" -> {
                     printHelp();
                     return;
@@ -50,322 +55,133 @@ public final class Main {
                 }
 
                 case "--input" -> {
-                    if (index + 1 >= args.length) {
-                        System.err.println(
-                                "Помилка: після --input потрібно вказати шлях.");
-                        return;
+                    if (i + 1 >= args.length) {
+                        throw new IllegalArgumentException(
+                                "для --input потрібно вказати шлях");
                     }
 
-                    input = Path.of(args[++index]);
+                    input = Path.of(args[++i]);
                 }
 
                 case "--output" -> {
-                    if (index + 1 >= args.length) {
-                        System.err.println(
-                                "Помилка: після --output потрібно вказати шлях.");
-                        return;
+                    if (i + 1 >= args.length) {
+                        throw new IllegalArgumentException(
+                                "для --output потрібно вказати шлях");
                     }
 
-                    output = Path.of(args[++index]);
+                    output = Path.of(args[++i]);
                 }
 
-                default -> {
-                    System.err.printf(
-                            "Помилка: невідомий аргумент \"%s\".%n",
-                            args[index]);
-
-                    printHelp();
-                    return;
-                }
+                default -> throw new IllegalArgumentException(
+                        "невідомий параметр: " + args[i]);
             }
         }
 
-        processFile(input, output);
-    }
+        List<String> lines =
+                Files.readAllLines(input, StandardCharsets.UTF_8);
 
-    /**
-     * Читає файл, перевіряє записи та накопичує показники меню.
-     *
-     * @param input шлях до вхідного CSV-файла
-     * @param output шлях до файла звіту
-     */
-    private static void processFile(Path input, Path output) {
-        final List<String> lines;
+        List<MenuItem> items = new ArrayList<>();
 
-        try {
-            lines = Files.readAllLines(
-                    input,
-                    StandardCharsets.UTF_8);
-        } catch (IOException exception) {
-            System.err.printf(
-                    "Не вдалося прочитати файл \"%s\": %s%n",
-                    input,
-                    exception.getMessage());
-            return;
-        }
-
-        int validCount = 0;
-        double totalPrice = 0.0;
-        int maxWeight = Integer.MIN_VALUE;
-        int maxPrepTime = Integer.MIN_VALUE;
-
-        for (int index = 0; index < lines.size(); index++) {
-            String line = lines.get(index);
-            int lineNumber = index + 1;
-
-            if (line.isBlank()) {
-                printSkippedLine(
-                        lineNumber,
-                        "порожній рядок");
-                continue;
-            }
-
-            String[] fields = line.split(";", -1);
-
-            if (fields.length != 5) {
-                printSkippedLine(
-                        lineNumber,
-                        "очікується 5 полів, отримано "
-                                + fields.length);
-                continue;
-            }
+        for (int i = 0; i < lines.size(); i++) {
+            String line = lines.get(i);
 
             try {
-                requireNonBlank(fields[0], "name");
-                requireNonBlank(fields[1], "category");
-
-                double price =
-                        parseNonNegativeDouble(fields[2], "price");
-
-                int weight =
-                        parseNonNegativeInt(fields[3], "weightG");
-
-                int prepTime =
-                        parseNonNegativeInt(fields[4], "prepMin");
-
-                validCount++;
-                totalPrice += price;
-                maxWeight = Math.max(maxWeight, weight);
-                maxPrepTime = Math.max(maxPrepTime, prepTime);
-
+                MenuItem item = MenuItem.fromCsv(line);
+                items.add(item);
             } catch (IllegalArgumentException exception) {
-                printSkippedLine(
-                        lineNumber,
+                System.err.printf(
+                        "Пропущено рядок %d: %s%n",
+                        i + 1,
                         exception.getMessage());
             }
         }
 
-        String report = buildReport(
-                validCount,
-                totalPrice,
-                maxWeight,
-                maxPrepTime);
+        String report = createReport(items);
 
         System.out.print(report);
-        writeReport(output, report);
+
+        Path parent = output.getParent();
+
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
+
+        Files.writeString(
+                output,
+                report,
+                StandardCharsets.UTF_8);
     }
 
     /**
-     * Перевіряє, що текстове поле не є порожнім.
+     * Формує підсумковий звіт для коректних позицій меню.
      *
-     * @param value значення поля
-     * @param fieldName назва поля
+     * @param items коректні позиції меню
+     * @return текстовий звіт
      */
-    private static void requireNonBlank(
-            String value,
-            String fieldName) {
+    private static String createReport(List<MenuItem> items) {
+        String newline = System.lineSeparator();
 
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName + " порожнє");
-        }
-    }
+        StringBuilder report = new StringBuilder();
 
-    /**
-     * Перетворює текст у невід'ємне скінченне число double.
-     *
-     * @param value текстове значення
-     * @param fieldName назва поля
-     * @return перевірене число
-     */
-    private static double parseNonNegativeDouble(
-            String value,
-            String fieldName) {
+        report.append("Меню кафе — варіант 5")
+                .append(newline);
 
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName + " порожнє");
+        report.append("Коректних записів: ")
+                .append(items.size())
+                .append(newline);
+
+        if (items.isEmpty()) {
+            report.append(
+                    "Показники не обчислено: немає коректних записів.")
+                    .append(newline);
+
+            return report.toString();
         }
 
-        final double result;
+        double averagePrice = items.stream()
+                .mapToDouble(MenuItem::getPrice)
+                .average()
+                .orElse(0.0);
 
-        try {
-            result = Double.parseDouble(value.trim());
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName
-                            + " має бути числом",
-                    exception);
-        }
+        int maxWeight = items.stream()
+                .mapToInt(MenuItem::getWeightG)
+                .max()
+                .orElse(0);
 
-        if (!Double.isFinite(result)) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName
-                            + " має бути скінченним числом");
-        }
+        int maxPrepTime = items.stream()
+                .mapToInt(MenuItem::getPrepMin)
+                .max()
+                .orElse(0);
 
-        if (result < 0) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName
-                            + " не може бути від'ємним");
-        }
-
-        return result;
-    }
-
-    /**
-     * Перетворює текст у невід'ємне ціле число.
-     *
-     * @param value текстове значення
-     * @param fieldName назва поля
-     * @return перевірене ціле число
-     */
-    private static int parseNonNegativeInt(
-            String value,
-            String fieldName) {
-
-        if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName + " порожнє");
-        }
-
-        final int result;
-
-        try {
-            result = Integer.parseInt(value.trim());
-        } catch (NumberFormatException exception) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName
-                            + " має бути цілим числом",
-                    exception);
-        }
-
-        if (result < 0) {
-            throw new IllegalArgumentException(
-                    "поле " + fieldName
-                            + " не може бути від'ємним");
-        }
-
-        return result;
-    }
-
-    /**
-     * Формує підсумковий текст звіту.
-     *
-     * @param validCount кількість коректних записів
-     * @param totalPrice сума цін
-     * @param maxWeight найбільша вага
-     * @param maxPrepTime найдовший час приготування
-     * @return текст звіту
-     */
-    private static String buildReport(
-            int validCount,
-            double totalPrice,
-            int maxWeight,
-            int maxPrepTime) {
-
-        if (validCount == 0) {
-            return String.format(
-                    Locale.ROOT,
-                    "Меню кафе — варіант 5%n"
-                            + "Коректних записів: 0%n"
-                            + "Показники не обчислено: "
-                            + "немає коректних записів.%n");
-        }
-
-        double averagePrice = totalPrice / validCount;
-
-        return String.format(
+        report.append(String.format(
                 Locale.ROOT,
-                "Меню кафе — варіант 5%n"
-                        + "Коректних записів: %d%n"
-                        + "Середня ціна: %.2f%n"
-                        + "Найбільша вага: %d г%n"
-                        + "Найдовший час приготування: %d хв%n",
-                validCount,
+                "Середня ціна: %.2f%s",
                 averagePrice,
-                maxWeight,
-                maxPrepTime);
+                newline));
+
+        report.append("Найбільша вага: ")
+                .append(maxWeight)
+                .append(" г")
+                .append(newline);
+
+        report.append("Найдовший час приготування: ")
+                .append(maxPrepTime)
+                .append(" хв")
+                .append(newline);
+
+        return report.toString();
     }
 
-    /**
-     * Записує сформований звіт у UTF-8 файл.
-     *
-     * @param output шлях до файла
-     * @param report текст звіту
-     */
-    private static void writeReport(
-            Path output,
-            String report) {
-
-        try {
-            Path parent = output.getParent();
-
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-
-            Files.writeString(
-                    output,
-                    report,
-                    StandardCharsets.UTF_8);
-
-            System.out.printf(
-                    "Звіт записано у: %s%n",
-                    output);
-
-        } catch (IOException exception) {
-            System.err.printf(
-                    "Не вдалося записати звіт \"%s\": %s%n",
-                    output,
-                    exception.getMessage());
-        }
-    }
-
-    /**
-     * Виводить причину пропуску некоректного рядка.
-     *
-     * @param lineNumber номер рядка
-     * @param reason причина
-     */
-    private static void printSkippedLine(
-            int lineNumber,
-            String reason) {
-
-        System.err.printf(
-                "Пропущено рядок %d: %s%n",
-                lineNumber,
-                reason);
-    }
-
-    /**
-     * Виводить довідку щодо параметрів командного рядка.
-     */
     private static void printHelp() {
-        System.out.printf(
-                "Лабораторна робота №1, варіант 5 — Меню кафе%n"
-                        + "%n"
-                        + "Використання:%n"
-                        + "  java ua.lpnu.kzp.Main [параметри]%n"
-                        + "%n"
-                        + "Параметри:%n"
-                        + "  --help             показати довідку%n"
-                        + "  --version          показати версію програми%n"
-                        + "  --input <файл>     вхідний UTF-8 файл%n"
-                        + "  --output <файл>    файл звіту%n"
-                        + "%n"
-                        + "За замовчуванням:%n"
-                        + "  input:  data/input.csv%n"
-                        + "  output: out/report.txt%n");
+        System.out.println("""
+                Використання:
+                  java -jar lab01-1.0.0.jar [options]
+
+                Параметри:
+                  --help          показати довідку
+                  --version       показати версію програми
+                  --input FILE    шлях до вхідного файла
+                  --output FILE   шлях до файла звіту
+                """);
     }
 }
