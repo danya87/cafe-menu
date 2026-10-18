@@ -1213,7 +1213,7 @@ https://github.com/danya87/cafe-menu/pull/11
 Фінальний зелений CI-запуск:
 
 ```text
-TODO: додати після фінального Pull Request
+https://github.com/danya87/cafe-menu/actions/runs/39125951066
 ```
 
 Git tag `v2.0.0`:
