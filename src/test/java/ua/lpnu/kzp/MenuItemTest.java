@@ -201,4 +201,34 @@ class MenuItemTest {
                 IllegalArgumentException.class,
                 () -> new PriceWeight(10.0, -1));
     }
+
+    @Test
+    void builderCreatesValidMenuItem() {
+        MenuItem item = MenuItem.builder()
+                .name("Капучино")
+                .category("Напої")
+                .price(75.00)
+                .weightG(250)
+                .prepMin(7)
+                .build();
+
+        assertEquals("Капучино", item.getName());
+        assertEquals("Напої", item.getCategory());
+        assertEquals(75.00, item.getPrice(), 0.001);
+        assertEquals(250, item.getWeightG());
+        assertEquals(7, item.getPrepMin());
+    }
+
+    @Test
+    void builderCannotBypassConstructorValidation() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> MenuItem.builder()
+                        .name("Капучино")
+                        .category("Напої")
+                        .price(-10.00)
+                        .weightG(250)
+                        .prepMin(7)
+                        .build());
+    }
 }

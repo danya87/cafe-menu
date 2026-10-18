@@ -104,6 +104,15 @@ public final class MenuItem {
     }
 
     /**
+     * Створює новий Builder для MenuItem.
+     *
+     * @return новий Builder
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
      * Повертає назву позиції меню.
      *
      * @return назва
@@ -197,6 +206,90 @@ public final class MenuItem {
             throw new IllegalArgumentException(
                     "поле " + fieldName + " має бути цілим числом",
                     exception);
+        }
+    }
+
+    /**
+     * Builder для поетапного створення MenuItem.
+     *
+     * <p>Метод build() використовує основний конструктор MenuItem,
+     * тому не обходить перевірку інваріантів.</p>
+     */
+    public static final class Builder {
+
+        private String name;
+        private String category;
+        private double price;
+        private int weightG;
+        private int prepMin;
+
+        /**
+         * Задає назву.
+         *
+         * @param value назва
+         * @return цей Builder
+         */
+        public Builder name(String value) {
+            this.name = value;
+            return this;
+        }
+
+        /**
+         * Задає категорію.
+         *
+         * @param value категорія
+         * @return цей Builder
+         */
+        public Builder category(String value) {
+            this.category = value;
+            return this;
+        }
+
+        /**
+         * Задає ціну.
+         *
+         * @param value ціна
+         * @return цей Builder
+         */
+        public Builder price(double value) {
+            this.price = value;
+            return this;
+        }
+
+        /**
+         * Задає вагу у грамах.
+         *
+         * @param value вага
+         * @return цей Builder
+         */
+        public Builder weightG(int value) {
+            this.weightG = value;
+            return this;
+        }
+
+        /**
+         * Задає час приготування.
+         *
+         * @param value час у хвилинах
+         * @return цей Builder
+         */
+        public Builder prepMin(int value) {
+            this.prepMin = value;
+            return this;
+        }
+
+        /**
+         * Створює MenuItem через основний конструктор.
+         *
+         * @return коректний MenuItem
+         */
+        public MenuItem build() {
+            return new MenuItem(
+                    name,
+                    category,
+                    price,
+                    weightG,
+                    prepMin);
         }
     }
 }
