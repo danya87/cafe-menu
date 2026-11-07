@@ -588,9 +588,6 @@ GitHub Actions успішно перевіряє проєкт на Ubuntu, Windo
 v1.0.0
 ```
 
-**Фінальний Pull Request:** #5 «Lab 1: Cafe Menu».
-
-**Git-тег:** TODO — створити після merge у `main`.
 
 Створений у цій роботі консольний застосунок та інфраструктура Maven/CI будуть використані як початкова база для лабораторної роботи №2.
 
@@ -1006,7 +1003,7 @@ develop-lab2 → main
 Фінальний Pull Request:
 
 ```text
-TODO: додати посилання після створення
+https://github.com/danya87/cafe-menu/pull/18
 ```
 
 ## 9. Порівняння поведінки Lab 1 і Lab 2
@@ -1836,7 +1833,7 @@ develop-lab3 → main
 Фінальний Pull Request:
 
 ```text
-TODO: додати посилання після створення
+https://github.com/danya87/cafe-menu/pull/18
 ```
 
 ## 12. Порівняння поведінки Lab 2 і Lab 3
@@ -2089,13 +2086,13 @@ https://github.com/danya87/cafe-menu/actions
 Фінальний Pull Request:
 
 ```text
-TODO: додати посилання після створення
+https://github.com/danya87/cafe-menu/pull/18
 ```
 
 Фінальний зелений CI-запуск:
 
 ```text
-TODO: додати посилання після фінального запуску
+https://github.com/danya87/cafe-menu/actions/runs/42403912008
 ```
 
 Git tag `v3.0.0`:
