@@ -12,7 +12,7 @@ class MenuItemTest {
 
     @Test
     void constructorCreatesValidMenuItem() {
-        MenuItem item = new MenuItem(
+        MenuItem item = new TestMenuItem(
                 "Борщ український",
                 "Основні страви",
                 145.50,
@@ -30,7 +30,7 @@ class MenuItemTest {
     void constructorRejectsNullName() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MenuItem(
+                () -> new TestMenuItem(
                         null,
                         "Напої",
                         75.00,
@@ -42,7 +42,7 @@ class MenuItemTest {
     void constructorRejectsBlankName() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MenuItem(
+                () -> new TestMenuItem(
                         "   ",
                         "Напої",
                         75.00,
@@ -54,7 +54,7 @@ class MenuItemTest {
     void constructorRejectsBlankCategory() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MenuItem(
+                () -> new TestMenuItem(
                         "Капучино",
                         "   ",
                         75.00,
@@ -64,7 +64,7 @@ class MenuItemTest {
 
     @Test
     void constructorAcceptsZeroBoundaryValues() {
-        MenuItem item = new MenuItem(
+        MenuItem item = new TestMenuItem(
                 "Вода",
                 "Напої",
                 0.0,
@@ -80,7 +80,7 @@ class MenuItemTest {
     void constructorRejectsNegativePrice() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MenuItem(
+                () -> new TestMenuItem(
                         "Кава",
                         "Напої",
                         -1.0,
@@ -92,7 +92,7 @@ class MenuItemTest {
     void constructorRejectsNegativeWeight() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MenuItem(
+                () -> new TestMenuItem(
                         "Сирники",
                         "Десерти",
                         120.00,
@@ -104,7 +104,7 @@ class MenuItemTest {
     void constructorRejectsNegativePrepTime() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new MenuItem(
+                () -> new TestMenuItem(
                         "Салат",
                         "Закуски",
                         95.00,
@@ -167,7 +167,7 @@ class MenuItemTest {
 
     @Test
     void getPriceWeightReturnsItemPriceAndWeight() {
-        MenuItem item = new MenuItem(
+        MenuItem item = new TestMenuItem(
                 "Борщ",
                 "Основні страви",
                 145.50,
@@ -230,5 +230,29 @@ class MenuItemTest {
                         .weightG(250)
                         .prepMin(7)
                         .build());
+    }
+
+    private static final class TestMenuItem extends MenuItem {
+
+        TestMenuItem(
+                String name,
+                String category,
+                double price,
+                int weightG,
+                int prepMin) {
+
+            super(
+                validateName(name),
+                validateCategory(category),
+                validatePrice(price),
+                validateWeight(weightG),
+                validatePrepTime(prepMin),
+                validateKind(MenuKind.DISH));
+        }
+
+        @Override
+        public double preparationCost() {
+            return getPrice();
+        }
     }
 }
