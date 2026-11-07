@@ -6,7 +6,8 @@ import java.util.Objects;
 /**
  * Базовий тип для позицій меню кафе.
  */
-public abstract class MenuItem {
+public sealed abstract class MenuItem
+        permits Dish, Drink, Dessert {
 
     private static final int FIELD_COUNT = 5;
 
@@ -198,6 +199,21 @@ public abstract class MenuItem {
                 weightG,
                 prepMin,
                 kind);
+    }
+
+    /**
+     * Повертає опис конкретного підтипу через
+     * вичерпний pattern-matching switch.
+     *
+     * @param item позиція меню
+     * @return опис підтипу
+     */
+    public static String subtypeDescription(MenuItem item) {
+        return switch (item) {
+            case Dish dish -> "Страва";
+            case Drink drink -> "Напій";
+            case Dessert dessert -> "Десерт";
+        };
     }
 
     @Override
