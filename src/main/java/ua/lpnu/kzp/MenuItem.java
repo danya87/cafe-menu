@@ -1,11 +1,13 @@
 package ua.lpnu.kzp;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /**
- * Представляє одну позицію меню кафе.
+ * Базовий тип для позицій меню кафе.
  */
-public final class MenuItem {
+public sealed abstract class MenuItem
+        permits Dish, Drink, Dessert {
 
     private static final int FIELD_COUNT = 5;
 
@@ -14,68 +16,39 @@ public final class MenuItem {
     private final double price;
     private final int weightG;
     private final int prepMin;
+    private final MenuKind kind;
 
     /**
-     * Створює позицію меню та перевіряє коректність її значень.
+     * Створює позицію меню.
      *
-     * @param name назва позиції меню
-     * @param category категорія позиції
+     * @param name назва
+     * @param category категорія
      * @param price ціна
      * @param weightG вага у грамах
-     * @param prepMin час приготування у хвилинах
-     * @throws IllegalArgumentException якщо значення некоректні
+     * @param prepMin базовий час приготування
+     * @param kind тип позиції меню
      */
-    public MenuItem(
+    protected MenuItem(
             String name,
             String category,
             double price,
             int weightG,
-            int prepMin) {
+            int prepMin,
+            MenuKind kind) {
 
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException(
-                    "поле name не може бути порожнім");
-        }
-
-        if (category == null || category.isBlank()) {
-            throw new IllegalArgumentException(
-                    "поле category не може бути порожнім");
-        }
-
-        if (!Double.isFinite(price)) {
-            throw new IllegalArgumentException(
-                    "поле price має бути скінченним числом");
-        }
-
-        if (price < 0) {
-            throw new IllegalArgumentException(
-                    "поле price не може бути від'ємним");
-        }
-
-        if (weightG < 0) {
-            throw new IllegalArgumentException(
-                    "поле weightG не може бути від'ємним");
-        }
-
-        if (prepMin < 0) {
-            throw new IllegalArgumentException(
-                    "поле prepMin не може бути від'ємним");
-        }
-
-        this.name = name.trim();
-        this.category = category.trim();
+        this.name = name;
+        this.category = category;
         this.price = price;
         this.weightG = weightG;
         this.prepMin = prepMin;
+        this.kind = kind;
     }
 
     /**
-     * Створює позицію меню з одного CSV-рядка.
+     * Створює відповідний підтип MenuItem з CSV-рядка.
      *
-     * @param line рядок формату name;category;price;weightG;prepMin
-     * @return створена позиція меню
-     * @throws IllegalArgumentException якщо рядок має неправильний формат
-     *                                  або містить некоректні значення
+     * @param line CSV-рядок
+     * @return позиція меню
      */
     public static MenuItem fromCsv(String line) {
         if (line == null || line.isBlank()) {
@@ -91,42 +64,45 @@ public final class MenuItem {
 
         String name = fields[0].trim();
         String category = fields[1].trim();
-        double price = parseDouble(fields[2].trim(), "price");
-        int weightG = parseInt(fields[3].trim(), "weightG");
-        int prepMin = parseInt(fields[4].trim(), "prepMin");
 
-        return new MenuItem(
-                name,
-                category,
-                price,
-                weightG,
-                prepMin);
+        double price =
+                parseDouble(fields[2].trim(), "price");
+
+        int weightG =
+                parseInt(fields[3].trim(), "weightG");
+
+        int prepMin =
+                parseInt(fields[4].trim(), "prepMin");
+
+        MenuKind kind = MenuKind.fromCategory(category);
+
+        return switch (kind) {
+            case DISH ->
+                    new Dish(name, category, price, weightG, prepMin);
+
+            case DRINK ->
+                    new Drink(name, category, price, weightG, prepMin);
+
+            case DESSERT ->
+                    new Dessert(name, category, price, weightG, prepMin);
+        };
     }
 
     /**
-     * Створює новий Builder для MenuItem.
-     *
-     * @return новий Builder
-     */
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    /**
-     * Повертає назву позиції меню.
+     * Повертає назву.
      *
      * @return назва
      */
-    public String getName() {
+    public final String getName() {
         return name;
     }
 
     /**
-     * Повертає категорію позиції меню.
+     * Повертає категорію.
      *
      * @return категорія
      */
-    public String getCategory() {
+    public final String getCategory() {
         return category;
     }
 
@@ -135,42 +111,111 @@ public final class MenuItem {
      *
      * @return ціна
      */
-    public double getPrice() {
+    public final double getPrice() {
         return price;
     }
 
     /**
-     * Повертає вагу у грамах.
+     * Повертає вагу.
      *
      * @return вага
      */
-    public int getWeightG() {
+    public final int getWeightG() {
         return weightG;
     }
 
     /**
-     * Повертає час приготування у хвилинах.
+     * Повертає базовий час приготування.
      *
-     * @return час приготування
+     * @return хвилини
      */
-    public int getPrepMin() {
+    public final int getPrepMin() {
         return prepMin;
     }
 
     /**
-     * Повертає допоміжне незмінне представлення ціни та ваги.
+     * Повертає тип позиції меню.
      *
-     * @return ціна та вага позиції меню
+     * @return тип
      */
-    public PriceWeight getPriceWeight() {
+    public final MenuKind getKind() {
+        return kind;
+    }
+
+    /**
+     * Поліморфно обчислює вартість приготування позиції.
+     *
+     * @return розрахункова вартість приготування
+     */
+    public abstract double preparationCost();
+
+    /**
+     * Повертає допоміжне значення ціни та ваги.
+     *
+     * @return ціна та вага
+     */
+    public final PriceWeight getPriceWeight() {
         return new PriceWeight(price, weightG);
     }
 
     /**
-     * Повертає текстове представлення позиції меню.
+     * Порівнює позиції меню за конкретним підтипом і всіма полями стану.
      *
-     * @return форматований рядок
+     * @param other інший об'єкт
+     * @return true, якщо об'єкти логічно рівні
      */
+    @Override
+    public final boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+
+        MenuItem item = (MenuItem) other;
+
+        return Double.compare(price, item.price) == 0
+                && weightG == item.weightG
+                && prepMin == item.prepMin
+                && name.equals(item.name)
+                && category.equals(item.category)
+                && kind == item.kind;
+    }
+
+    /**
+     * Повертає хеш-код, узгоджений з equals().
+     *
+     * @return хеш-код об'єкта
+     */
+    @Override
+    public final int hashCode() {
+        return Objects.hash(
+                getClass(),
+                name,
+                category,
+                price,
+                weightG,
+                prepMin,
+                kind);
+    }
+
+    /**
+     * Повертає опис конкретного підтипу через
+     * вичерпний pattern-matching switch.
+     *
+     * @param item позиція меню
+     * @return опис підтипу
+     */
+    public static String subtypeDescription(MenuItem item) {
+        return switch (item) {
+            case Dish dish -> "Страва";
+            case Drink drink -> "Напій";
+            case Dessert dessert -> "Десерт";
+        };
+    }
+
     @Override
     public String toString() {
         return String.format(
@@ -181,6 +226,70 @@ public final class MenuItem {
                 price,
                 weightG,
                 prepMin);
+    }
+
+    /**
+     * Створює Builder для позиції меню.
+     *
+     * @return новий Builder
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Builder для створення конкретного підтипу MenuItem.
+     */
+    public static final class Builder {
+
+        private String name;
+        private String category;
+        private double price;
+        private int weightG;
+        private int prepMin;
+
+        public Builder name(String value) {
+            this.name = value;
+            return this;
+        }
+
+        public Builder category(String value) {
+            this.category = value;
+            return this;
+        }
+
+        public Builder price(double value) {
+            this.price = value;
+            return this;
+        }
+
+        public Builder weightG(int value) {
+            this.weightG = value;
+            return this;
+        }
+
+        public Builder prepMin(int value) {
+            this.prepMin = value;
+            return this;
+        }
+
+        /**
+         * Створює конкретний підтип відповідно до категорії.
+         *
+         * @return створена позиція меню
+         */
+        public MenuItem build() {
+            MenuKind kind = MenuKind.fromCategory(category);
+
+            return switch (kind) {
+                case DISH ->
+                        new Dish(name, category, price, weightG, prepMin);
+                case DRINK ->
+                        new Drink(name, category, price, weightG, prepMin);
+                case DESSERT ->
+                        new Dessert(name, category, price, weightG, prepMin);
+            };
+        }
     }
 
     private static double parseDouble(
@@ -209,87 +318,62 @@ public final class MenuItem {
         }
     }
 
-    /**
-     * Builder для поетапного створення MenuItem.
-     *
-     * <p>Метод build() використовує основний конструктор MenuItem,
-     * тому не обходить перевірку інваріантів.</p>
-     */
-    public static final class Builder {
-
-        private String name;
-        private String category;
-        private double price;
-        private int weightG;
-        private int prepMin;
-
-        /**
-         * Задає назву.
-         *
-         * @param value назва
-         * @return цей Builder
-         */
-        public Builder name(String value) {
-            this.name = value;
-            return this;
+    protected static String validateName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new IllegalArgumentException(
+                    "поле name не може бути порожнім");
         }
 
-        /**
-         * Задає категорію.
-         *
-         * @param value категорія
-         * @return цей Builder
-         */
-        public Builder category(String value) {
-            this.category = value;
-            return this;
+        return name.trim();
+    }
+
+    protected static String validateCategory(String category) {
+        if (category == null || category.isBlank()) {
+            throw new IllegalArgumentException(
+                    "поле category не може бути порожнім");
         }
 
-        /**
-         * Задає ціну.
-         *
-         * @param value ціна
-         * @return цей Builder
-         */
-        public Builder price(double value) {
-            this.price = value;
-            return this;
+        return category.trim();
+    }
+
+    protected static double validatePrice(double price) {
+        if (!Double.isFinite(price)) {
+            throw new IllegalArgumentException(
+                    "поле price має бути скінченним числом");
         }
 
-        /**
-         * Задає вагу у грамах.
-         *
-         * @param value вага
-         * @return цей Builder
-         */
-        public Builder weightG(int value) {
-            this.weightG = value;
-            return this;
+        if (price < 0) {
+            throw new IllegalArgumentException(
+                    "поле price не може бути від'ємним");
         }
 
-        /**
-         * Задає час приготування.
-         *
-         * @param value час у хвилинах
-         * @return цей Builder
-         */
-        public Builder prepMin(int value) {
-            this.prepMin = value;
-            return this;
+        return price;
+    }
+
+    protected static int validateWeight(int weightG) {
+        if (weightG < 0) {
+            throw new IllegalArgumentException(
+                    "поле weightG не може бути від'ємним");
         }
 
-        /**
-         * Створює MenuItem через основний конструктор.
-         *
-         * @return коректний MenuItem
-         */
-        public MenuItem build() {
-            return new MenuItem(
-                    name,
-                    category,
-                    price,
-                    weightG,
-                    prepMin);
+        return weightG;
+    }
+
+    protected static int validatePrepTime(int prepMin) {
+        if (prepMin < 0) {
+            throw new IllegalArgumentException(
+                    "поле prepMin не може бути від'ємним");
         }
+
+        return prepMin;
+    }
+
+    protected static MenuKind validateKind(MenuKind kind) {
+        if (kind == null) {
+            throw new IllegalArgumentException(
+                    "поле kind не може бути null");
+        }
+
+        return kind;
     }
 }

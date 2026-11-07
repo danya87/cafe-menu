@@ -172,23 +172,23 @@ class MainTest {
     @Test
     void versionOptionPrintsProgramVersion() {
         PrintStream originalOut = System.out;
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream();
 
         try {
             System.setOut(
-                    new PrintStream(
-                            buffer,
-                            true,
-                            StandardCharsets.UTF_8));
+                new PrintStream(
+                        output,
+                        true,
+                        StandardCharsets.UTF_8));
 
-            Main.main(new String[] {"--version"});
+            Main.main(new String[]{"--version"});
         } finally {
             System.setOut(originalOut);
-        }
+        }   
 
         assertEquals(
-                "2.0.0",
-                buffer.toString(StandardCharsets.UTF_8).trim());
+            ProjectVersion.get(),
+            output.toString(StandardCharsets.UTF_8).trim());
     }
 
     /**
