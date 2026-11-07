@@ -1,6 +1,7 @@
 package ua.lpnu.kzp;
 
 import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Базовий тип для позицій меню кафе.
@@ -154,6 +155,49 @@ public abstract class MenuItem {
      */
     public final PriceWeight getPriceWeight() {
         return new PriceWeight(price, weightG);
+    }
+
+    /**
+     * Порівнює позиції меню за конкретним підтипом і всіма полями стану.
+     *
+     * @param other інший об'єкт
+     * @return true, якщо об'єкти логічно рівні
+     */
+    @Override
+    public final boolean equals(Object other) {
+        if (this == other) {
+            return true;
+        }
+
+        if (other == null || getClass() != other.getClass()) {
+            return false;
+        }
+
+        MenuItem item = (MenuItem) other;
+
+        return Double.compare(price, item.price) == 0
+                && weightG == item.weightG
+                && prepMin == item.prepMin
+                && name.equals(item.name)
+                && category.equals(item.category)
+                && kind == item.kind;
+    }
+
+    /**
+     * Повертає хеш-код, узгоджений з equals().
+     *
+     * @return хеш-код об'єкта
+     */
+    @Override
+    public final int hashCode() {
+        return Objects.hash(
+                getClass(),
+                name,
+                category,
+                price,
+                weightG,
+                prepMin,
+                kind);
     }
 
     @Override
